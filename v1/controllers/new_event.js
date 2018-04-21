@@ -13,9 +13,13 @@ module.exports = function(req, res){
 
     try {
         Floor.findOne({floorNo: floor}).exec(function(err, f){
+            current = f.currentActivity;
             future = f.futureActivities;
             var errorFag = 0;
-            if (future.length > 0){
+            if (Date.parse(activity.timeStart) < Date.parse(current.timeEnd)){
+                errorFag = 1;
+            } 
+            if (future.length > 0 && errorFag == 0){
                 errorFag = 1;
                 for (var x = 0; x < future.length; x++){
                     if (Date.parse(activity.timeStart) < Date.parse(activity.timeEnd)){
