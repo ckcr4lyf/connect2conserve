@@ -51,48 +51,51 @@
                 }
             }
 
-            var client = new HttpClient();
-            client.get('/v1/all', function(response) {
-                k = JSON.parse(response);
-                for (var x in k){
-                    console.log(k[x]);
-                    var i = k[x].floorNo;
-                    var tr = document.getElementById(i.toString());
-                    while (tr.firstChild){
-                        tr.removeChild(tr.firstChild);
-                    }
-                    var td = document.createElement("td");
-                    //First column - floor number
-                    td.innerHTML = i.toString() + " (" + k[x].gender + ")"; 
-                    td.setAttribute("class", "floorno");
-                    var jst = "on(" + i.toString() + ")";
-                    td.setAttribute("onclick", jst);
-                    tr.appendChild(td);
-                    var td = document.createElement("td");
-                    td.setAttribute("class", "status");
-                    //Seconf column - status
-                    td.innerHTML = k[x].status;
-                    tr.appendChild(td);
-                    var td = document.createElement("td");
-                    if (k[x].status && k[x].status == "Free"){
-                        td.setAttribute("class", "no_activity");
-                        //Third column = type of activity
-                        td.innerHTML = "(Start your own!)";
-                        tr.appendChild(td);
-                    } else if (k[x].status && k[x].status == "Occupied") {
-                        td.setAttribute("class", "activity");
-                        //Third column = type of activity
-                        td.innerHTML = k[x].currentActivity.typ;
+            function maal(){
+                var client = new HttpClient();
+                client.get('/v1/all', function(response) {
+                    k = JSON.parse(response);
+                    for (var x in k){
+                        var i = k[x].floorNo;
+                        var tr = document.getElementById(i.toString());
+                        while (tr.firstChild){
+                            tr.removeChild(tr.firstChild);
+                        }
+                        var td = document.createElement("td");
+                        //First column - floor number
+                        td.innerHTML = i.toString() + " (" + k[x].gender + ")"; 
+                        td.setAttribute("class", "floorno");
+                        var jst = "on(" + i.toString() + ")";
+                        td.setAttribute("onclick", jst);
                         tr.appendChild(td);
                         var td = document.createElement("td");
-                        td.setAttribute("class", "organizer");
-                        //Fourth column - organizer name
-                        td.innerHTML = k[x].currentActivity.organizer;
+                        td.setAttribute("class", "status");
+                        //Seconf column - status
+                        td.innerHTML = k[x].status;
                         tr.appendChild(td);
+                        var td = document.createElement("td");
+                        if (k[x].status && k[x].status == "Free"){
+                            td.setAttribute("class", "no_activity");
+                            //Third column = type of activity
+                            td.innerHTML = "(Start your own!)";
+                            tr.appendChild(td);
+                        } else if (k[x].status && k[x].status == "Occupied") {
+                            td.setAttribute("class", "activity");
+                            //Third column = type of activity
+                            td.innerHTML = k[x].currentActivity.typ;
+                            tr.appendChild(td);
+                            var td = document.createElement("td");
+                            td.setAttribute("class", "organizer");
+                            //Fourth column - organizer name
+                            td.innerHTML = k[x].currentActivity.organizer;
+                            tr.appendChild(td);
+                        }
+                        //document.getElementById(i.toString()).style.backgroundColor = "green";
                     }
-                    //document.getElementById(i.toString()).style.backgroundColor = "green";
-                }
-            });
+                });
+            }
+            
+            maal();
         </script>
         <style>
             #overlay {
@@ -132,14 +135,14 @@
                 Enter end time: <input type = "datetime-local" name = "timeEnd"> <br>
                 <input name = "floor" type = "hidden" id = "floor">
             </form>
-
             <button type = "submit" form = "new_event" onclick="off()">Go bois</button>
             <button onclick="off()">Cancel</button>
             </div>
         </div>
+
+        <img src = "/v1/update_events" style="display:none" id= "getter">
         <script>
             makeTable();
-
             var form = document.getElementById("new_event");
 
             form.onsubmit = function (e) {
@@ -172,7 +175,11 @@
                 xhr.send(JSON.stringify(data));
 
                 xhr.onloadend = function () {
-                    // done
+                    var gg = document.getElementById("getter");
+                    var clt = new HttpClient();
+                    clt.get('/v1/update_events', function(response){
+                        maal();
+                    })
                 };
             };
         </script>
