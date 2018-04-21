@@ -17,11 +17,11 @@ module.exports = function(req, res){
             var errorFag = 0;
             if (future.length > 0){
                 errorFag = 1;
-                for (var x in future){
-                    if (activity.timeStart < activity.timeEnd){
-                        if (activity.timeEnd < future[x].timeStart){
+                for (var x = 0; x < future.length; x++){
+                    if (Date.parse(activity.timeStart) < Date.parse(activity.timeEnd)){
+                        if (Date.parse(activity.timeEnd) < Date.parse(future[x].timeStart)){
                             errorFag = 0;
-                        } else if (activity.timeStart > future[x].timeEnd){
+                        } else if (Date.parse(activity.timeStart) > Date.parse(future[x].timeEnd)){
                             errorFag = 0;
                         } else {
                             errorFag = 1;
