@@ -48,7 +48,7 @@ module.exports = function(req, res){
                     {upsert: true}
                 ).exec(function (err){
                     if (!err){
-                        res.status(200).send("Successfully added new activity");
+                        res.status(200).send("Success");
                     } else {
                         invalidRequest("Unable to add to db");
                         console.log(err);

@@ -2,6 +2,8 @@
     <head>
         <title> Connect to Conserve platform </title>
         <script>
+            var floorData;
+
             function makeTable(){
                 var tbl = document.createElement("table");
                 var tr = document.createElement("tr");
@@ -17,6 +19,7 @@
                 var td = document.createElement("td");
                 td.innerHTML = "Organizer";
                 tr.appendChild(td);
+                tr.setAttribute("class", "head");
                 tbl.appendChild(tr);
                 for (var i = 6; i < 26; i++){
                     var tr = document.createElement("tr");
@@ -25,6 +28,95 @@
                 }
                 var body = document.getElementsByTagName("body");
                 body[0].appendChild(tbl);
+            }
+
+            function details(floorNo){
+                var divv = document.getElementById("floor-status");
+                while (divv.firstChild){
+                    divv.removeChild(divv.firstChild);
+                }
+                var f = parseInt(floorNo);
+                var index = floorData.findIndex(x => x.floorNo == f);
+                var fData = floorData[index];
+                var tbl = document.createElement("table");
+                tbl.setAttribute("class", "summary");
+                var tr = document.createElement("tr");
+                var td = document.createElement("td");
+                td.innerHTML = "Floor";
+                tr.appendChild(td);
+                var td = document.createElement("td");
+                td.innerHTML = floorNo + "(" + fData.gender + ")";
+                tr.appendChild(td);
+                tbl.appendChild(tr);
+                if (fData.status != "Free"){
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "Event type";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.innerHTML = fData.currentActivity.typ;
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "Description";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.innerHTML = fData.currentActivity.description;
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "Organizer";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.innerHTML = fData.currentActivity.organizer;
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "End Time";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    var dt = Date.parse(fData.currentActivity.timeEnd);
+                    dt = Date(dt);
+                    td.innerHTML = dt;
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "Upcoming Events";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.innerHTML = JSON.stringify(fData.futureActivities);
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "<button onclick='on(" + floorNo + ")'> Create Event </button>";
+                    td.setAttribute("colspan", "2");
+                    td.style['text-align'] = "center";
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                } else {
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "Upcoming Events";
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.innerHTML = JSON.stringify(fData.futureActivities);
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerHTML = "<button onclick='on(" + floorNo + ")'> Create Event </button>";
+                    td.setAttribute("colspan", "2");
+                    tr.appendChild(td);
+                    tbl.appendChild(tr);
+                }
+                divv.appendChild(tbl);
+                divv.style.display = "block";
+                divv.setAttribute("onclick", "this.style.display = 'none'");
             }
 
             function on(floorNo) {
@@ -55,6 +147,8 @@
                 var client = new HttpClient();
                 client.get('/v1/all', function(response) {
                     k = JSON.parse(response);
+                    floorData = JSON.parse(response);
+                    console.log(floorData);
                     for (var x in k){
                         var i = k[x].floorNo;
                         var tr = document.getElementById(i.toString());
@@ -66,7 +160,9 @@
                         td.innerHTML = i.toString() + " (" + k[x].gender + ")"; 
                         td.setAttribute("class", "floorno");
                         var jst = "on(" + i.toString() + ")";
-                        td.setAttribute("onclick", jst);
+                        var morejs = "details(" + i.toString() + ")";
+                        tr.setAttribute("onclick", morejs);
+                        //td.setAttribute("onclick", jst);
                         tr.appendChild(td);
                         var td = document.createElement("td");
                         td.setAttribute("class", "status");
@@ -78,7 +174,12 @@
                             td.setAttribute("class", "no_activity");
                             //Third column = type of activity
                             td.innerHTML = "(Start your own!)";
+                            td.setAttribute("colspan", 2);
                             tr.appendChild(td);
+                            tr.setAttribute("class", "free");
+                            // var td = document.createElement("td");
+                            // td.setAttribute("class", "organizer");
+                            // tr.appendChild(td);
                         } else if (k[x].status && k[x].status == "Occupied") {
                             td.setAttribute("class", "activity");
                             //Third column = type of activity
@@ -86,6 +187,7 @@
                             tr.appendChild(td);
                             var td = document.createElement("td");
                             td.setAttribute("class", "organizer");
+                            tr.setAttribute("class", "occupado");
                             //Fourth column - organizer name
                             td.innerHTML = k[x].currentActivity.organizer;
                             tr.appendChild(td);
@@ -98,6 +200,47 @@
             maal();
         </script>
         <style>
+            table {
+                width: 80%;
+                margin: auto;
+                border-collapse: collapse;
+                font-family: Verdana,sans-serif;    
+            }
+
+            .summary {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 40%;
+                margin: auto;
+                border-collapse: collapse;
+                background: gray;
+                transform: translate(-50%, -50%);
+            }
+
+            .summary td{
+                font-size: 0.9em;
+                padding: 0.5rem;
+            }
+
+            td {
+                border: 1px solid #999;
+                padding: 1rem 0.5rem 1rem 0.5rem;
+            }
+
+            .head {
+                font-size: 1.4em;
+                background-color: #87CEEB;
+            }
+
+            .occupado {
+                background-color: #ffa600;
+            }
+
+            .free {
+                background-color: #99ff33;
+            }
+
             #overlay {
                 position: fixed;
                 display: none;
@@ -112,11 +255,66 @@
                 cursor: pointer;
             }
 
+            #status-overlay {
+                position: fixed;
+                display: none;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            input {
+                padding: 6px;;
+                margin: 6px;
+            }
+
+            button {
+                background-color: #708090; /* Green */
+                border: none;
+                color: white;
+                padding: 1em 1em;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                border: 1px solid black;
+            }
+
+            #floor-status {
+                position: fixed;
+                display: none;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            #status-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 4em;
+            }
+
             #text {
                 position: absolute;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+                background-color: gray;
+                padding: 3rem;
             }
         </style>
     </head>
@@ -138,6 +336,13 @@
             <button type = "submit" form = "new_event" onclick="off()">Go bois</button>
             <button onclick="off()">Cancel</button>
             </div>
+        </div>
+
+        <div id="status-overlay">
+            <span id="status-text"></span>
+        </div>
+
+        <div id="floor-status">
         </div>
 
         <img src = "/v1/update_events" style="display:none" id= "getter">
@@ -180,6 +385,25 @@
                     clt.get('/v1/update_events', function(response){
                         maal();
                     })
+                    var pdiv = document.getElementById("status-overlay");
+                    var pspan = document.getElementById("status-text");
+                    if (this.responseText == "Success"){
+                        pdiv.style.display = "block";
+                        pspan.style.color = "#00B500";
+                        pspan.innerHTML = "Successfully added new event";
+                        setTimeout(function(){
+                            pdiv.style.display = "none";
+                        }, 2000);
+                    } else {
+                        pdiv.style.display = "block";
+                        pspan.style.color = "#FF0000";
+                        pspan.innerHTML = "Failed to add event - possible overlap";
+                        setTimeout(function(){
+                            pdiv.style.display = "none";
+                        }, 2000);
+                    }
+                    console.log(this.responseText);
+                    console.log(this.responseType);
                 };
             };
         </script>
