@@ -1,0 +1,180 @@
+<html>
+    <head>
+        <title> Connect to Conserve platform </title>
+        <script>
+            function makeTable(){
+                var tbl = document.createElement("table");
+                var tr = document.createElement("tr");
+                var td1 = document.createElement("td");
+                var td2 = document.createElement("td");
+                td1.innerHTML = "Floor";
+                td2.innerHTML = "Status";
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                var td = document.createElement("td");
+                td.innerHTML = "Event Type";
+                tr.appendChild(td);
+                var td = document.createElement("td");
+                td.innerHTML = "Organizer";
+                tr.appendChild(td);
+                tbl.appendChild(tr);
+                for (var i = 6; i < 26; i++){
+                    var tr = document.createElement("tr");
+                    tr.setAttribute("id", i.toString());
+                    tbl.appendChild(tr);
+                }
+                var body = document.getElementsByTagName("body");
+                body[0].appendChild(tbl);
+            }
+
+            function on(floorNo) {
+                document.getElementById("overlay").style.display = "block";
+                document.getElementById("forfloor").innerHTML = "New event on floor " + floorNo.toString();
+                var inp = document.getElementById("floor");
+                inp.value = floorNo;
+            }
+
+            function off() {
+                document.getElementById("overlay").style.display = "none";
+            }
+
+            var HttpClient = function() {
+                this.get = function(aUrl, aCallback) {
+                    var anHttpRequest = new XMLHttpRequest();
+                    anHttpRequest.onreadystatechange = function() { 
+                        if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                            aCallback(anHttpRequest.responseText);
+                    }
+
+                    anHttpRequest.open( "GET", aUrl, true );            
+                    anHttpRequest.send( null );
+                }
+            }
+
+            var client = new HttpClient();
+            client.get('/v1/all', function(response) {
+                k = JSON.parse(response);
+                for (var x in k){
+                    console.log(k[x]);
+                    var i = k[x].floorNo;
+                    var tr = document.getElementById(i.toString());
+                    while (tr.firstChild){
+                        tr.removeChild(tr.firstChild);
+                    }
+                    var td = document.createElement("td");
+                    //First column - floor number
+                    td.innerHTML = i.toString() + " (" + k[x].gender + ")"; 
+                    td.setAttribute("class", "floorno");
+                    var jst = "on(" + i.toString() + ")";
+                    td.setAttribute("onclick", jst);
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    td.setAttribute("class", "status");
+                    //Seconf column - status
+                    td.innerHTML = k[x].status;
+                    tr.appendChild(td);
+                    var td = document.createElement("td");
+                    if (k[x].status && k[x].status == "Free"){
+                        td.setAttribute("class", "no_activity");
+                        //Third column = type of activity
+                        td.innerHTML = "(Start your own!)";
+                        tr.appendChild(td);
+                    } else if (k[x].status && k[x].status == "Occupied") {
+                        td.setAttribute("class", "activity");
+                        //Third column = type of activity
+                        td.innerHTML = k[x].currentActivity.typ;
+                        tr.appendChild(td);
+                        var td = document.createElement("td");
+                        td.setAttribute("class", "organizer");
+                        //Fourth column - organizer name
+                        td.innerHTML = k[x].currentActivity.organizer;
+                        tr.appendChild(td);
+                    }
+                    //document.getElementById(i.toString()).style.backgroundColor = "green";
+                }
+            });
+        </script>
+        <style>
+            #overlay {
+                position: fixed;
+                display: none;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            #text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Welcome to the pantry sharing revolution!</h1>
+        <div id="overlay">
+            <div id = "text">
+                <h4 id = "forfloor"></h4> 
+            <form method="POST" action="/v1/new_event" id="new_event">
+                Enter type of event: <input type = "text" name = "typ"> <br>
+                Enter a brief description: <input type = "text" name = "description"> <br>
+                Enter your name: <input type = "text" name = "organizer"> <br>
+                Enter your UID: <input type = "text" name = "uid"> <br>
+                Enter start time: <input type = "datetime-local" name = "timeStart" id = "kekman"> <br>
+                Enter end time: <input type = "datetime-local" name = "timeEnd"> <br>
+                <input name = "floor" type = "hidden" id = "floor">
+            </form>
+
+            <button type = "submit" form = "new_event" onclick="off()">Go bois</button>
+            <button onclick="off()">Cancel</button>
+            </div>
+        </div>
+        <script>
+            makeTable();
+
+            var form = document.getElementById("new_event");
+
+            form.onsubmit = function (e) {
+                // stop the regular form submission
+                e.preventDefault();
+
+                // collect the form data while iterating over the inputs
+                var data = {};
+                var sub = {};
+                for (var i = 0, ii = form.length; i < ii; ++i) {
+                    var input = form[i];
+                    if (input.name == "floor") {
+                        data[input.name] = input.value;
+                    } else if (input.type == "datetime-local") {
+                        var d = new Date(input.value);
+                        sub[input.name] = d
+                    } else {
+                        sub[input.name] = input.value;
+                    }
+                }
+
+                data.activity = sub;
+
+                // construct an HTTP request
+                var xhr = new XMLHttpRequest();
+                xhr.open(form.method, form.action, true);
+                xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+
+                // send the collected data as JSON
+                xhr.send(JSON.stringify(data));
+
+                xhr.onloadend = function () {
+                    // done
+                };
+            };
+        </script>
+    </body>
+</html>
